@@ -597,3 +597,52 @@ footer {
 .youtube-item iframe {
     border-radius: 18px 18px 0 0;
 }
+
+/* Responsive YouTube iframes */
+.portfolio-item iframe {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 16/9;
+    border-radius: 18px;
+}
+
+/* Mobile responsive adjustments for videos */
+@media (max-width: 768px) {
+    .portfolio-item iframe {
+        height: auto;
+        min-height: 200px;
+    }
+    
+    /* Shortform videos - maintain vertical aspect ratio on mobile */
+    #shortform .portfolio-item iframe,
+    #animation .portfolio-item iframe,
+    #brand .portfolio-item iframe {
+        aspect-ratio: 9/16;
+        max-height: 400px;
+    }
+    
+    /* Motion graphics - maintain horizontal aspect ratio */
+    #motion .portfolio-item iframe {
+        aspect-ratio: 16/9;
+        height: auto;
+    }
+    
+    /* Gaming section */
+    #gaming .portfolio-item iframe {
+        aspect-ratio: 16/9;
+        height: auto;
+    }
+}
+
+@media (max-width: 480px) {
+    .portfolio-item iframe {
+        min-height: 180px;
+    }
+    
+    /* Adjust shortform video height for very small screens */
+    #shortform .portfolio-item iframe,
+    #animation .portfolio-item iframe,
+    #brand .portfolio-item iframe {
+        max-height: 350px;
+    }
+}
