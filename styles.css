@@ -548,52 +548,67 @@ footer {
     }
 }
 
-/* YouTube Video Styles */
-.youtube-item .youtube-thumbnail {
-    position: relative;
-    width: 100%;
-    height: 280px;
-    background: linear-gradient(135deg, rgba(168, 85, 247, 0.08) 0%, rgba(124, 58, 237, 0.04) 50%, rgba(91, 33, 182, 0.02) 100%);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.4s cubic-bezier(0.28, 0.11, 0.32, 1);
-    border-radius: 18px 18px 0 0;
-}
-
-.youtube-thumbnail img {
+/* Video Styles */
+.portfolio-item video {
     width: 100%;
     height: 100%;
     object-fit: cover;
     border-radius: 18px 18px 0 0;
+    background: linear-gradient(135deg, rgba(168, 85, 247, 0.08) 0%, rgba(124, 58, 237, 0.04) 50%, rgba(91, 33, 182, 0.02) 100%);
 }
 
-.youtube-thumbnail .play-button {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: rgba(255, 0, 0, 0.9);
-    color: white;
-    font-size: 2rem;
-    width: 70px;
-    height: 50px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 8px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-    transition: all 0.3s ease;
-    padding-left: 5px;
+/* Animation section - smaller video */
+#animation .portfolio-item video {
+    max-width: 70%;
+    margin: 0 auto;
+    display: block;
 }
 
-.youtube-thumbnail:hover .play-button {
-    background: rgba(255, 0, 0, 1);
-    transform: translate(-50%, -50%) scale(1.1);
-    box-shadow: 0 6px 25px rgba(255, 0, 0, 0.4);
+/* Legacy iframe styles (kept for compatibility) */
+.portfolio-item iframe {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 16/9;
+    border-radius: 18px;
 }
 
-.youtube-item iframe {
-    border-radius: 18px 18px 0 0;
+/* Mobile responsive adjustments for videos */
+@media (max-width: 768px) {
+    .portfolio-item iframe {
+        height: auto;
+        min-height: 200px;
+    }
+    
+    /* Shortform videos - maintain vertical aspect ratio on mobile */
+    #shortform .portfolio-item iframe,
+    #animation .portfolio-item iframe,
+    #brand .portfolio-item iframe {
+        aspect-ratio: 9/16;
+        max-height: 400px;
+    }
+    
+    /* Motion graphics - maintain horizontal aspect ratio */
+    #motion .portfolio-item iframe {
+        aspect-ratio: 16/9;
+        height: auto;
+    }
+    
+    /* Gaming section */
+    #gaming .portfolio-item iframe {
+        aspect-ratio: 16/9;
+        height: auto;
+    }
+}
+
+@media (max-width: 480px) {
+    .portfolio-item iframe {
+        min-height: 180px;
+    }
+    
+    /* Adjust shortform video height for very small screens */
+    #shortform .portfolio-item iframe,
+    #animation .portfolio-item iframe,
+    #brand .portfolio-item iframe {
+        max-height: 350px;
+    }
 }
