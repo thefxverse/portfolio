@@ -1,25 +1,231 @@
 document.addEventListener('DOMContentLoaded', function() {
-    // Video hover effects
-    const portfolioItems = document.querySelectorAll('.portfolio-item');
+    // Video streaming control - load only when play button is clicked
+    const videos = document.querySelectorAll('video');
     
-    portfolioItems.forEach(item => {
-        const video = item.querySelector('video');
+    videos.forEach(video => {
+        // Ensure preload is set to none
+        video.preload = 'none';
         
-        if (video) {
-            // Play video on hover and scale up
-            item.addEventListener('mouseenter', function() {
-                video.play();
-                video.style.transform = 'scale(1.1)';
-            });
-            
-            // Pause video when mouse leaves and reset scale
-            item.addEventListener('mouseleave', function() {
+        // Generate thumbnail if not already set
+        if (!video.poster) {
+            // Add loading placeholder first
+            video.style.backgroundColor = '#1a0b2e';
+            generateThumbnail(video);
+        }
+        
+        // Add event listener for when user clicks play
+        video.addEventListener('loadstart', function() {
+            console.log('Video started loading:', this.currentSrc);
+        });
+        
+        // Optional: Add loading indicator
+        video.addEventListener('waiting', function() {
+            console.log('Video is buffering...');
+        });
+        
+        video.addEventListener('canplay', function() {
+            console.log('Video can start playing');
+        });
+        
+        // Pause other videos when this one starts playing
+        video.addEventListener('play', function() {
+            pauseOtherVideos(this);
+        });
+    });
+    
+    // Function to pause all other videos when one starts playing
+    function pauseOtherVideos(currentVideo) {
+        const allVideos = document.querySelectorAll('video');
+        allVideos.forEach(video => {
+            if (video !== currentVideo && !video.paused) {
                 video.pause();
-                video.currentTime = 0;
-                video.style.transform = 'scale(1)';
+                console.log('Paused other video:', video.currentSrc);
+            }
+        });
+    }
+    
+    // Pause all videos when page becomes hidden (user switches tabs/minimizes browser)
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+            const allVideos = document.querySelectorAll('video');
+            allVideos.forEach(video => {
+                if (!video.paused) {
+                    video.pause();
+                    console.log('Paused video due to tab switch:', video.currentSrc);
+                }
             });
         }
     });
+    
+    // Function to generate thumbnail from video
+    function generateThumbnail(video) {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Create a temporary video element to load and capture frame
+        const tempVideo = document.createElement('video');
+        tempVideo.muted = true;
+        tempVideo.setAttribute('playsinline', '');
+        tempVideo.setAttribute('webkit-playsinline', '');
+        
+        // Get the video source
+        const source = video.querySelector('source');
+        if (source) {
+            tempVideo.src = source.src;
+        }
+        
+        // Set up event listeners
+        tempVideo.addEventListener('loadedmetadata', function() {
+            // Set canvas dimensions to match video
+            canvas.width = this.videoWidth || 640;
+            canvas.height = this.videoHeight || 360;
+            
+            // Seek to 2 seconds (or 10% of video duration, whichever is smaller)
+            const seekTime = Math.min(2, this.duration * 0.1);
+            this.currentTime = seekTime;
+        });
+        
+        tempVideo.addEventListener('seeked', function() {
+            try {
+                // Draw the current frame to canvas
+                ctx.drawImage(this, 0, 0, canvas.width, canvas.height);
+                
+                // Add a subtle overlay to indicate it's clickable
+                const gradient = ctx.createRadialGradient(canvas.width/2, canvas.height/2, 0, canvas.width/2, canvas.height/2, Math.min(canvas.width, canvas.height)/2);
+                gradient.addColorStop(0, 'rgba(0, 0, 0, 0)');
+                gradient.addColorStop(0.7, 'rgba(0, 0, 0, 0)');
+                gradient.addColorStop(1, 'rgba(0, 0, 0, 0.3)');
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // Add a small play icon in the center
+                const centerX = canvas.width / 2;
+                const centerY = canvas.height / 2;
+                const playSize = Math.min(canvas.width, canvas.height) * 0.1;
+                
+                // Play button background
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, playSize, 0, 2 * Math.PI);
+                ctx.fill();
+                
+                // Play triangle
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+                ctx.beginPath();
+                ctx.moveTo(centerX - playSize * 0.3, centerY - playSize * 0.4);
+                ctx.lineTo(centerX - playSize * 0.3, centerY + playSize * 0.4);
+                ctx.lineTo(centerX + playSize * 0.5, centerY);
+                ctx.closePath();
+                ctx.fill();
+                
+                // Convert canvas to data URL and set as poster
+                const thumbnailDataURL = canvas.toDataURL('image/jpeg', 0.85);
+                video.poster = thumbnailDataURL;
+                
+                console.log('Generated thumbnail for video:', source.src);
+            } catch (error) {
+                console.log('Error generating thumbnail:', error);
+                // Fallback to placeholder thumbnail
+                createPlaceholderThumbnail(video);
+            }
+            
+            // Clean up
+            this.remove();
+        });
+        
+        tempVideo.addEventListener('error', function(e) {
+            console.log('Error loading video for thumbnail:', e);
+            // Fallback to placeholder thumbnail
+            createPlaceholderThumbnail(video);
+            this.remove();
+        });
+        
+        // Start loading the video
+        tempVideo.load();
+    }
+    
+    // Function to create a placeholder thumbnail
+    function createPlaceholderThumbnail(video) {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = 640;
+        canvas.height = 360;
+        
+        // Determine section type based on the video's parent section
+        const section = video.closest('.portfolio-section');
+        const sectionId = section ? section.id : 'default';
+        
+        // Create gradient background based on section
+        const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+        switch(sectionId) {
+            case 'brand':
+                gradient.addColorStop(0, '#e11d48');
+                gradient.addColorStop(0.5, '#dc2626');
+                gradient.addColorStop(1, '#b91c1c');
+                break;
+            case 'animation':
+                gradient.addColorStop(0, '#059669');
+                gradient.addColorStop(0.5, '#047857');
+                gradient.addColorStop(1, '#065f46');
+                break;
+            case 'motion':
+                gradient.addColorStop(0, '#7c3aed');
+                gradient.addColorStop(0.5, '#6d28d9');
+                gradient.addColorStop(1, '#5b21b6');
+                break;
+            case 'gaming':
+                gradient.addColorStop(0, '#ea580c');
+                gradient.addColorStop(0.5, '#dc2626');
+                gradient.addColorStop(1, '#b91c1c');
+                break;
+            case 'documentary':
+                gradient.addColorStop(0, '#0891b2');
+                gradient.addColorStop(0.5, '#0e7490');
+                gradient.addColorStop(1, '#155e75');
+                break;
+            case 'shortform':
+                gradient.addColorStop(0, '#db2777');
+                gradient.addColorStop(0.5, '#be185d');
+                gradient.addColorStop(1, '#9d174d');
+                break;
+            default:
+                gradient.addColorStop(0, '#a855f7');
+                gradient.addColorStop(0.5, '#8b5cf6');
+                gradient.addColorStop(1, '#7c3aed');
+        }
+        
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        // Add play button icon
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+        ctx.beginPath();
+        ctx.arc(canvas.width/2, canvas.height/2, 50, 0, 2 * Math.PI);
+        ctx.fill();
+        
+        // Add triangle (play icon)
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+        ctx.beginPath();
+        ctx.moveTo(canvas.width/2 - 18, canvas.height/2 - 25);
+        ctx.lineTo(canvas.width/2 - 18, canvas.height/2 + 25);
+        ctx.lineTo(canvas.width/2 + 25, canvas.height/2);
+        ctx.closePath();
+        ctx.fill();
+        
+        // Add section title
+        const sectionTitle = section ? section.querySelector('h2').textContent : 'Video';
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+        ctx.font = 'bold 28px -apple-system, BlinkMacSystemFont, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(sectionTitle, canvas.width/2, 60);
+        
+        // Add subtitle
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+        ctx.font = '18px -apple-system, BlinkMacSystemFont, sans-serif';
+        ctx.fillText('Click to Watch', canvas.width/2, canvas.height/2 + 100);
+        
+        video.poster = canvas.toDataURL('image/jpeg', 0.9);
+    }
     
     // Smooth scrolling for navigation links
     const navLinks = document.querySelectorAll('.nav-menu a');
