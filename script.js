@@ -3,8 +3,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const videos = document.querySelectorAll('video');
     
     videos.forEach(video => {
-        // Ensure preload is set to none
-        video.preload = 'none';
+        // Set preload based on file size estimation
+        const fileSize = estimateFileSize(video.currentSrc || video.querySelector('source')?.src);
+        video.preload = fileSize > 50 ? 'metadata' : 'none';
         
         // Generate thumbnail if not already set
         if (!video.poster) {
@@ -32,6 +33,16 @@ document.addEventListener('DOMContentLoaded', function() {
             pauseOtherVideos(this);
         });
     });
+    
+    // Function to estimate file size from filename (rough estimation)
+    function estimateFileSize(src) {
+        if (!src) return 0;
+        const filename = src.toLowerCase();
+        // Gaming and motion graphics videos tend to be larger
+        if (filename.includes('gaming') || filename.includes('motion')) return 100;
+        if (filename.includes('documentary')) return 65;
+        return 10; // Default for smaller videos
+    }
     
     // Function to pause all other videos when one starts playing
     function pauseOtherVideos(currentVideo) {
